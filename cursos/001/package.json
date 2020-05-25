@@ -1,0 +1,17 @@
+{
+  "name": "alurabank",
+  "version": "1.0.0",
+  "description": "Código estudado no curso [TypeScript parte 1: Evoluindo seu Javascript](https://cursos.alura.com.br/course/typescript-parte1).",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "tsc",
+    "start": "tsc -w"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jquery": "^2.0.42",
+    "typescript": "^2.3.2"
+  }
+}
