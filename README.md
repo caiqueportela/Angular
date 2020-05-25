@@ -9,7 +9,7 @@ Posso ainda não ter concluido a todos.
 
 ### Cursos
 
-- [ ] [TypeScript parte 1: Evoluindo seu Javascript](https://cursos.alura.com.br/course/typescript-parte1)
+- [X] [TypeScript parte 1: Evoluindo seu Javascript](https://cursos.alura.com.br/course/typescript-parte1)
 - [ ] [TypeScript parte 2: Mais técnicas e boas práticas](https://cursos.alura.com.br/course/typescript-parte2)
 - [ ] [Webpack: Manipulando módulos na sua webapp](https://cursos.alura.com.br/course/webpack)
 - [ ] [Angular parte 1: Fundamentos](https://cursos.alura.com.br/course/angular-fundamentos)
