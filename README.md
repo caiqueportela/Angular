@@ -9,8 +9,8 @@ Posso ainda não ter concluido a todos.
 
 ### Cursos
 
-- [X] [TypeScript parte 1: Evoluindo seu Javascript](https://cursos.alura.com.br/course/typescript-parte1)
-- [ ] [TypeScript parte 2: Mais técnicas e boas práticas](https://cursos.alura.com.br/course/typescript-parte2)
+- [X] [TypeScript parte 1: Evoluindo seu Javascript](https://cursos.alura.com.br/course/typescript-parte1) - [Código](https://github.com/caiqueportela/Angular/tree/master/cursos/001)
+- [X] [TypeScript parte 2: Mais técnicas e boas práticas](https://cursos.alura.com.br/course/typescript-parte2) - [Código](https://github.com/caiqueportela/Angular/tree/master/cursos/002)
 - [ ] [Webpack: Manipulando módulos na sua webapp](https://cursos.alura.com.br/course/webpack)
 - [ ] [Angular parte 1: Fundamentos](https://cursos.alura.com.br/course/angular-fundamentos)
 - [ ] [Angular parte 2: Autenticação, Forms e lazy loading](https://cursos.alura.com.br/course/angular-autenticacao)

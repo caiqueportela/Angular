@@ -53,6 +53,16 @@ Para compilar em tempo real, adicione o script:
 ```
 Para iniciar o watch, basta rodar *npm start*
 
+Para impedir que variáveis recebam valor *null* e *undefined*:
+```
+"strictNullChecks": true
+```
+
+Para remover comentários na compilação:
+```
+"removeComments": true,
+```
+
 ### Classe
 
 Diferentemente de JS, é necessário declarar os atributos de uma classe previamente:
@@ -98,6 +108,30 @@ class Pessoa {
 ```
 Dessa forma, as variáveis serão criadas como privadas e receberão o valor passado via construtor.
 
+Se eu tenho atributos que pode ser lidos mas não alterados, ao invés de defini-los como private e criar getters, posso fazer:
+Eu posso declarar atributos e atribuir valores pelo construtor:
+```typescript
+class Pessoa {
+
+    constructor(
+        readonly nome: string,
+        readonly sobrenome: string
+    ) { }
+}
+```
+
+Posso declarar um parametro como opcional:
+```typescript
+class Pessoa {
+
+    constructor(
+        readonly nome: string,
+        readonly sobrenome?: string
+    ) { }
+}
+```
+Basta adicionar **?** após seu nome, antes da declaração do tipo.
+
 ### Tipagem
 
 O Typescript adiocina a tipagem de variáveis, arumentos e retorno de funções.
@@ -136,3 +170,196 @@ class NegociacaoController {
 
 }
 ```
+
+### Bibliotecas
+
+A grande maioria das bibliotecas de JavaScript adicionam objetos ao escopo global, porem por padrão o TypeScript não sabe disso.
+
+Para corrigir, há duas possibilidades:
+```typescript
+declare var $: any;
+```
+Nesse caso, estou declarando o *$* que é utilizado pelo JQuery e dessa forma conseguirei utiliza-lo sem problemas. Porém perco a sugestão e complemento de código.
+
+Outra possibilidade é instalar a *tipagem* da biblioteca, caso existe. Ex:
+```
+npm i @types/jquery
+```
+Com isso o VSCode já reconheceria o JQuery para completar código e o compilador não daria erro.
+
+### namespace
+
+Com TypeScript posso declarar namespace:
+```typescript
+namespace Humanoides {
+
+    export class Homem {
+
+        // código omitido 
+    }    
+
+    export class Monstro {
+
+        // código omitido 
+    }        
+
+    export class Hibrido {
+
+        // código omitido 
+    }            
+}
+```
+Quando declaro namespace, preciso exportar as classes que fazem parte dele.
+
+Não preciso clicar as classes no mesmo arquivo, posso separa-las mas sempre colocar dentro do namespace:
+```typescript
+namespace Humanoides {
+
+    export class Homem {
+
+        // código omitido 
+    }
+
+}
+
+namespace Humanoides {
+
+    export class Monstro {
+
+        // código omitido 
+    }        
+
+}
+
+namespace Humanoides {
+
+    export class Hibrido {
+
+        // código omitido 
+    }
+
+}
+```
+
+Para utilizar uma classe que faz parte de um namespace:
+```typescript
+namespace Humanoides {
+
+    export class Homem {
+
+        // código omitido 
+    }
+
+}
+
+const homem = new Humanoides.Homem();
+```
+
+### decorators
+
+O JS possui a discussão sobre a implementação de decorators, e o Typescript já permite o uso.
+Com eles, podemos alterar o uso de funções e classes.
+
+Isso está em modo experimental no TypeScript, e para habilitar o uso devemos adicionar:
+```
+"experimentalDecorators": true
+```
+Dentro de *compilerOptions* do tsconfig.json.
+
+Apesar de experimental, é amplamente utilizado por frameworks, como Angular e React.
+
+Como exemplo, um decorator para mostar o tempo de execução de um método:
+```typescript
+class Loops {
+
+    @tempoExecucao()
+    loopGrande() {
+        // Código da função
+    }
+
+}
+```
+Da forma acima, estou adicionando um decorator que poderá alterar a implementação do método.
+
+E a implementação do decorator:
+```typescript
+export function tempoExecucao(emSegundos: boolean = false) {
+
+    return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        const metodoOriginal = descriptor.value;
+
+        descriptor.value = function(...args: any[])  {
+            let unidade = 'ms';
+            let divisor = 1;
+            if (emSegundos) {
+                unidade = 's';
+                divisor = 1000;
+            }
+
+            const t1 = performance.now();
+            const retorno = metodoOriginal.apply(this, args);
+            const t2 = performance.now();
+
+            console.log(`O método ${propertyKey} demorou ${(t2 - t1) / divisor} ${unidade}`);
+            
+            return retorno;
+        }
+
+        return descriptor;        
+    }
+
+}
+```
+Um decorator é uma função que retorna outra função. Ele pode receber parametros.
+
+A função retornada, quando em método, deve receber três parametros:
+
+- **target**: Instancia de onde o decorator foi usado
+- **propertyKey**: Nome do método onde o decorator foi usado
+- **descriptor**: Informações do método que recebeu o decorator
+
+Em **descriptor.value** está o código do método original. Devemos alterar a sua implementação para alterar o uso do método.
+Ele deve receber uma nova função que pode receber 0 a N parametros, pois a função pode ter nenhum, um, ou vários parametros
+
+Dentro dessa função podemos executar códigos antes e depois do método.
+
+Para efetivamente chamar o método original, devemos preservar em uma váriavel o valor original, e depois chamar:
+```typescript
+const metodoOriginal = descriptor.value;
+
+const retorno = metodoOriginal.apply(this, args);
+```
+O retorno do método deve ser guardado e retornado, para que seu funcionamento base se mantenha.
+
+No final a função deve retornar o descriptor alterado.
+
+Podemos também criar decorators de classe, que permite alterar o construtor da mesma:
+```typescript
+export function decorandoClasse() {
+
+    return function(constructor: any) {
+        const original = constructor;
+
+        const novo: any = function (...args: any[]) {
+            console.log("Criando uma instância com New: " + original.name); 
+            return new original(...args);
+        }
+
+        novo.prototype = original.prototype;
+
+        return novo;
+    }
+}
+
+@decorandoClasse()
+export class Loops {
+   // Implementação da classe
+}
+```
+Um decorator de classe, assim como de função, retorna uma função que deve receber seu construtor e armazena-lo.
+Essa função deve poder receber N argumentos.
+
+No final da alteração do construtor deve retornar uma instancia da classe.
+
+Deve manter o mesmo protoype. **Importante!**.
+Retorna a inteancia.
