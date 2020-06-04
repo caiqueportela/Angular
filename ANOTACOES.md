@@ -363,3 +363,27 @@ No final da alteração do construtor deve retornar uma instancia da classe.
 
 Deve manter o mesmo protoype. **Importante!**.
 Retorna a inteancia.
+
+## Angular
+
+### CLI
+
+Interface de linha de comando do Angular que auxilia na criação e gerenciamento de projetos.
+
+Para instalar, basta executar o comando:
+```
+npm install -g @angular/cli
+```
+Ele irá instalar o pacote globalmente no PC, ficando disponível em qualquer diretório, em qualquer projeto.
+
+Para criar um novo projeto:
+```
+ng new nomeDoProjeto
+```
+
+Para iniciar o projeto:
+```
+ng serve --open
+```
+A opção **--open** é opcional e serve para abrir o navegador com a aplicação em execução.
+
