@@ -364,6 +364,30 @@ No final da alteração do construtor deve retornar uma instancia da classe.
 Deve manter o mesmo protoype. **Importante!**.
 Retorna a inteancia.
 
+
+
+
+### Plus ++
+
+#### Safe navigation operator
+
+Existe um operador chamado **Safe navigation operator** que nos auxilia quando queremos acessar uma propriedade de um objeto e ela possa não existir.
+
+Com ele podemos checar se a propriedade existe, se não ele ignora e não da erro de acesso ao objeto.
+
+Exemplo:
+```typescript
+const pessoa = {
+    nome: 'Nome',
+    sobrenome: 'Sobrenome'
+};
+
+console.log(pessoa.historico?.trabalho);
+```
+Nesse caso, ele checa se a propriedade *historico* existe no objeto pessoa.
+
+
+
 ## Angular
 
 - Em angular, tudo é um componente.
@@ -371,10 +395,26 @@ Retorna a inteancia.
 - O **App** é o primeiro componente a ser carregado, tudo deve começar por ele.
 - Por convenção, os nomes dos arquivos possuem todas as palavras em minusculo separadas por hifen; E a extenção possui sempre o tipo do arquivo (modulo, componente, etc.) e no final .ts.
 
+### Build e Deploy
 
-O módulo **BrowserModule** possui diversos arquivos que são necessário pro Angular funcionar, inclusive as diretivar básica (*ngFor*, *ngIf*) e ele deve ser importante uma única vez no projeto, no primeiro módulo **AppModule**.
+O Angular CLI nos fornece um comando para realizer o build de produção do projeto, onde será aplicado várias técnicas de otimização de código para deixar ele o mais simples e menor possível.
 
-Mas, quando trabalhamos com vários módulos, como faremos pra usar diretivas? Bom, parte dos arquivos, incluindo as diretivas, são importadas do módulo **CommonModule** e ele pode ser importado inúmeras vezes.
+Para que ele se comporte como uma SPA e todas as requisições a rotas sejam feitas ao Angular e não a um backend, o servidor onde está hospedado o código **SEMPRE** deverá retornar o *index.html* como resposta para as rotas.
+
+Uma maneira de mudar isso e fazer que ele não necessite dessa mudança, é fazer com que seja adicionado uma *#* ao inicio da rota, que com isso os navegadores nunca enviarão a requisição para o servidor.
+
+Pasa isso, no seu módulo de rota principal, onde importa as primeiras rotas, altere o import para:
+```typescript
+@NgModule({
+  imports: [
+    RouterModule.forRoot(routes, { useHash: true })
+  ],
+  exports: [
+    RouterModule
+  ]
+})
+```
+Basicamente, adicionado a opção *useHash* o problema se resolve.
 
 ### CLI
 
@@ -396,6 +436,26 @@ Para iniciar o projeto:
 ng serve --open
 ```
 A opção **--open** é opcional e serve para abrir o navegador com a aplicação em execução.
+
+Para gerar um componente:
+```
+ng generate componente nome-do-componente
+```
+ou 
+```
+ng g c nome-do-componente
+```
+Será gerado o componente dentro da pasta *src/app*. Será criado uma pasta nom o nome dele e dentro dela o componente.
+
+Para gerar um serviço:
+```
+ng generate service nome-servico
+```
+ou 
+```
+ng g s nome-servico
+```
+Será gerado o serviço dentro da pasta *src/app*, sem gerar subpastas.
 
 ### Frameworks de terceiros
 
@@ -433,6 +493,8 @@ export class CabecalhoComponent {
 }
 ```
 Por convenção esse arquivo se chamaria *cabelho.component.ts*.
+
+Não é obrigatório a definição de um seletor.
 
 ### Data binding (Associação de dados)
 
@@ -496,6 +558,8 @@ Exemplo:
 })
 export class MeuModule { }
 ```
+
+Só coloca em exports componentes que serão chamados via template.
 
 ### Inbound properties
 
@@ -802,6 +866,18 @@ http
 ```
 Um o método subscribe de um Observable pode receber duas funções como parametros, a primeira pra caso de sucesso e a segunda pra caso de erro.
 
+O Observable pode receber inscrito diretamente no template. Isso faz sentido apenas quando a consulta vai ser única e não altera o valor a menos que recarregue a página. Este recurso de chama **async pipe**.
+
+Exemplo:
+```html
+<header class="fixed-top">
+    <div *ngFor="let item of data | async)">
+        <p>{{ item }}</p>
+    </div>
+</header>
+```
+Partindo que **data** é uma variável que recebeu um Observable que retornará uma lista de items, nos inscrevemos nela diretamente na diretiva *ngFor*.
+
 #### Subject
 
 Um valor observável que pode receber inumeros inscritos que serão informados quando seu valor for alterado.
@@ -826,6 +902,20 @@ observavel.subscribe(valor => console.log(`Novo valor: ${valor}));
 observavel.unsubscribe();
 ```
 
+#### BehaviorSubject
+
+Semelhante ao **Subject** mas com duas diferenças importantes:
+
+- Ele precisa possuir um valor inicial a ser emitido.
+- Se ninguém se inscreveu e recebeu o valor, ele armazena e vai emitir novamente quando alguem se inscrever.
+
+Exemplo:
+```typescript
+const observavel = new BehaviorSubject<string>(null);
+observavel.next('novo valor');
+```
+Posso definir o valor inicial como *null* caso não tenha nada ainda.
+
 #### pipe
 
 Permite sequenciar varias funções onde uma depende do resultado da outra para ser executada, assim encadeando chamadas.
@@ -838,6 +928,31 @@ pipe(
     filter(n => n % 2 === 0)
 );
 ```
+
+#### tap
+
+Dentro de um observable, conseguimos manipular sua resposta sem afeta-la e antes mesmo de realizar o subscribe.
+
+Exemplo:
+```typescript
+export class MeuService {
+
+  constructor(private http: HttpClient) { }
+
+  login(userName: string, password: string) {
+    return this.http
+      .post('http://localhost/login', {
+        userName,
+        password
+      })
+      .pipe(
+        tap(res => console.log(res))
+      );
+  }
+
+}
+```
+Pegamos a resposta de uma requisição e ainda retornamos o observable para receber uma inscrição.
 
 #### debounceTime
 
@@ -910,8 +1025,7 @@ export class MeuRoutingModule { }
 
 Pra essa rota funcionar, a view precisa saber onde o componente da rota deverá ser carregada.
 
-Para isso, no local onde esse componente deverá aparecer devemos adicionar a diretiva **<router-outlet></router-outlet>
-**.
+Para isso, no local onde esse componente deverá aparecer devemos adicionar a diretiva **\<router-outlet\>\</router-outlet\>**.
 
 Nesse local será exibido o componente da rota. Geralmente ela é colocada como único conteúdo do *app.component.html*.
 
@@ -947,6 +1061,183 @@ Para acessarmos o valor da rota de exemplo, fariamos
 const id = this.activatedRoute.snapshot.params.userId;
 ```
 O nome do parametro é o nome definido na rota.
+
+#### Guarda de rotas
+
+Normalmente será necessário proteger algumas rotas, seja porque o usuário precisa estar logado para acessa-la, ou simplesmente porque ele não possui permissão de acesso.
+
+Para isso, precisamos criar uma classe injetável. Ela pode implementar algumas interfaces diferentes, mas nesse primeiro momento vamos ver a **CanActivate** que ajuda a definir se esse rota pode ser ativada pelo usuário.
+
+Ao implementar a interface, ele obrigará a possuir o método **canActive** que pode retornar um booleano, um Observable do tipo booleano ou uma Promise do tipo booleano. No geral, ele deverá retornar um false caso o usuário não possa acessar, ou um true quando ele pode.
+```typescript
+import { Injectable } from '@angular/core';
+import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
+import { Observable } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class MinhaGuard implements CanActivate {
+
+  constructor(
+    private router: Router
+  ) { }
+
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | Observable<boolean> | Promise<boolean> {
+    if (Math.round(Math.random() * 10) % 2 === 0) {
+      this.router.navigate(['outra', 'rota']);
+      return false;
+    }
+
+    return true;
+  }
+
+}
+```
+O método está avaliando se um numero aleatorio gerado é par. Se for par, redireciona pra outra tela e nega acesso a atual. Caso contrário, permite acesso.
+
+Se negar o acesso, é essencial que haja um redirecionamento ou o dado que apareceria no *router-outlet* vai ficar vazio.
+
+No nosso arquivo de rotas, é necessário informar o uso dessa guarda.
+```typescript
+{
+    path: '',
+    component: MeuComponent,
+    canActivate: [
+      MinhaGuard
+    ],
+},
+```
+O *canActivate* recebe uma array pois pode receber mais de uma guarda.
+
+#### Rotas filhas
+
+Muitas vezes, iremos querer que um rota carregue um componente base (de um módulo do site, por exemplo) e esse componente possa ter suas próprias sub rotas (rotas filhas).
+
+Para isso, declaramos as rotas da seguinte forma:
+```typescript
+{
+  path: '',
+  component: IndexComponent,
+  children: [
+    {
+      path: '',
+      component: LoginComponent,
+    },
+    {
+      path: 'register',
+      component: RegisterComponent,
+    },
+  ]
+},
+```
+Assim, a rota '*raiz*' por padrão carrega um componente base e essa rota possui filhos. Esses filhos definem sub rotas a partir da base do pai. Uma rota filha com o *path* vazio define o primeiro componente a ser exibido caso nenhuma sub rota seja informada.
+
+No componente pai, adicionamos **\<router-outlet\>\</router-outlet\>** onde queremos que seja exibido as rotas filhas.
+
+#### Navegação via template
+
+Para navegar entre rotas da nossa aplicação um simples tag a funcionaria, porém por padrão ele causaria o recarregamento da página, o que não é esperado por uma SPA.
+
+Para ajudar com isso, temos acesso a diretiva **routerLink** que nos ajuda com a navegação. Para utiliza-la em nosso módulos, precisamos importar o **RouterModule**.
+
+Exemplo
+```html
+<a [routerLink]="['nova', 'tela']">Mudando de tela</a>
+```
+Assim como o *navigate* do *router* essa diretiva recebe uma array para montar o endereço de destino.
+
+
+
+#### Lazy loading
+
+Conforme o projeto cresce, o tamanho dos arquivos gerados também cresce, podendo ficar bem grandes. O problema disso é que o primeiro carregamento do site fica demorado, e acaba impactando na experiência do usuário.
+
+Mas para resolver isso, podemos implementar o carregamento Lazy loading em módulos, assim os arquivos referentes a este módulo só serão carregados caso necessário, diminuindo o tempo do primeiro carregamento.
+
+Primeiramente, pra um módulo ter um carregamento LazyLoading eme não pode ser importado por nenhum outro módulo e deve possuir seu próprio módulo de rotas.
+
+Esse arquivo de rotas filhos poderá ser configurado como for necessário, a única necessidade é de que ao importar as rotas, não se pode mais utilizar o método *forRouter*, agora ficando ***forChield***.
+
+Exemplo:
+```typescript
+import { NgModule } from '@angular/core';
+import { Routes, RouterModule } from '@angular/router';
+
+const routes: Routes = [
+  {
+    path: '',
+    component: HomeComponent,
+    children: [
+      {
+        path: '',
+        component: LoginComponent,
+      },
+      {
+        path: 'registro',
+        component: RegistroComponent,
+      },
+    ]
+  }
+];
+
+@NgModule({
+  imports: [
+    RouterModule.forChild(routes)
+  ],
+  exports: [
+    RouterModule
+  ]
+})
+export class HomeRoutingModule { }
+```
+Importando lembrar de importar esse módulo de roteamento no módulo que ele corresponde.
+
+Agora, nosso arquivo de rota principal irá definir a rota base que apontará para esse módulo em lazy loading.
+
+Ele basicamente define qual a rota e aplica um redirect para ela. E a partir disso, carrega o módulo filho (quando a rota for acessada).
+
+Exemplo:
+```typescript
+import { NgModule } from '@angular/core';
+import { Routes, RouterModule } from '@angular/router';
+
+const routes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    redirectTo: 'home'
+  },
+  {
+    path: 'home',
+    loadChildren: './home/home.module#HomeModule',
+  }
+];
+
+@NgModule({
+  imports: [
+    RouterModule.forRoot(routes)
+  ],
+  exports: [
+    RouterModule
+  ]
+})
+export class AppRoutingModule { }
+```
+Assim, quando for acessao a rota raiz, e der um *patchMatch* com valor *full* (Como é a rota raiz, qualquer rota daria match com ela, então o *full* agora que será exatamente a rota raiz sem nada mais) ele irá redirecionar para a rota *home*.
+
+E a rota home, por sua vez, carregará um filho (módulo lazy loading) de um jeito um pouco diferente. É passado o caminho do arquivo módulo sem a extensão .ts, no final é adicionado um *#* e em seguida o nome do módulo.
+
+Com isso, o angular já entender que esse módulo é lazy loading e separa em outros arquivos, que só serão carregados caso necessário.
+
+##### providers
+
+Ao utilizar lazy loading, existe um ponto: os **Injectables**. Isso porque quando definimos uma classe com esse decorador, definimos que ela é provida no escopo global (*root*), então mesmo sem esse módulo ter sido carregado, os serviços estarão disponíveis, e para toda a aplicação!
+
+Para contornar isso, posso remove o objeto da declaração do decorator que cria esse escopo. Mas ai essas classes não poderão ser mais injetadas. E existe duas formas de resolver:
+
+- Se essa classe apenas é ultilizada por um único componente, dentro da declaração do componente passamos a um atributo chamado **providers** um array contendo os Injectables que ele precisa.
+- Se é utilizada por mais de um componente do módulo, ai declaramos dentro do módulo também no atributo **providers**.
 
 ### Resolvers
 
@@ -1024,11 +1315,435 @@ logClick() {
 }
 ```
 
+#### ViewChild
+
+Podemos acessar um elemento do DOM e realizar manipulações sobre ele. Pode receber a referência para o elemento, ou a variavel de template.
+
+Exemplo:
+```html
+<input #textoInput type="text" />
+```
+```typescript
+export class MeuComponent implements OnInit {
+
+    @ViewChild('textoInput') textoInput: ElementRef<HTMLInputElement>;
+
+    ngOnInit(): void {
+        this.textoInput.nativeElement.focus();
+    }
+}
+```
+Ele nos retorna uma referência para o elemento (Pode receber um generic para especificar o tipo do elemento). E a partir dessa referência podemos acessar o elemento nativo e manipula-lo.
+
+#### Injectable
+
+Define que a classe é injetável em contrutores de classes ou em templates.
+
+Geralmente utilizado em serviços e diretivas.
+
+#### Inject
+
+Auxilia na injeção de um token em uma variável.
+
+A injeção de dependencia geralmente está associada a uma classe, mas nesse caso estamos se referindo a um valor único (stirng, number, etc.) que é fornecido por algum módulo e precisamos injeta-lo em uma classe para utilizado.
+
+Para isso, fazermos a injeção fornecendo esse decorator passando qual valor será injetado. Exemplo:
+```typescript
+import { Injectable, PLATFORM_ID, Inject } from '@angular/core';
+
+@Injectable({providedIn: 'root'})
+export class PlatformService {
+
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: string
+  ) { }
+
+}
+```
+Nesse caso estamos injetando um valor textual que o angular fornece que é referente a qual plataforma o usuário está acessando a aplicação.
+
 ### Classes
 
 O Angular possui algumas classes que podem (e vão) ajudar...
 
-#### Renderer2
+#### Renderer2 <sub><sub>Fornecido por **CommonModule**.</sub></sub>
 
 Permite a manipulação do DOM independente do local. Como o Angular permite a renderização do lado do servidor, isso pode impedir muitos problemas e trazer códigos universais.
 
+#### HttpClient <sub><sub>Fornecido por **CommonModule**.</sub></sub>
+
+Permite realização requisições http retornando um Observable.
+
+##### post
+
+Realizando uma requisição post:
+```typescript
+export class MeuService {
+
+  constructor(private http: HttpClient) { }
+
+  login(userName: string, password: string) {
+    return this.http
+      .post('http://localhost/login', {
+        userName,
+        password
+      });
+  }
+
+}
+```
+Nesse caso estamos realizado uma requisição do tipo post a url informada, passado no corpo os parametros fornecidos.
+
+Para resgatar o cabeçalho de resposta, devemos adicionar um novo parametro:
+```typescript
+export class MeuService {
+
+  constructor(private http: HttpClient) { }
+
+  login(userName: string, password: string) {
+    return this.http
+      .post('http://localhost/login', {
+        userName,
+        password
+      }, { observe: 'response' })
+      .pipe(
+        tap(res => console.log(res.headers))
+      );
+  }
+
+}
+```
+Adicionando o parametro **observe** com o valor *response* poderemos receber o cabeçalho de resposta.
+
+Aproveitando os operados pipe e tap do RxJS, conseguimos pegar a resposta antes de retornar o Observable. Assim temos acesso ao cabeçalho.
+
+#### Router <sub><sub>Fornecido por **RouterModule**.</sub></sub>
+
+Da acesso a manipulação de rota atual. Deve ser injetado.
+
+Com ele, podemos navegar entre rotas. E possui diferentes formas para isso.
+
+**navigateByUrl**
+```typescript
+export default MeuComponent {
+
+    constructor(
+        private router: Router
+    ) { }
+
+    navegar() {
+        this.router.navigateByUrl(`rota/nova`);
+    }
+}
+```
+Permite navegar passando a rota completa de destino. Dependendo do tamanho da rota, pode ficar muito comprido e confuso.
+
+**navigate**
+```typescript
+export class MeuComponent {
+
+    constructor(
+        private router: Router
+    ) { }
+
+    navegar() {
+        this.router.navigate(['rota', 'nova']);
+    }
+}
+```
+Recebe como primeiro parametro uma array contendo cada valor que forma a rota. Eles serão juntados separados por barra.
+
+#### ActivatedRoute <sub><sub>Fornecido por **RouterModule**.</sub></sub>
+
+Permite acesso aos dados da rota atual.
+
+Propriedades interessantes:
+
+**snapshot**
+Se refere a uma fotografia atual da rota, e essa fotografia possui informações passados a ela.
+
+```typescript
+export class MeuComponent implements OnInit {
+
+    constructor(
+        private activatedRoute: ActivatedRoute
+    ) { }
+
+    ngOnInit(): void {
+        console.log(this.activatedRoute.snapshot.params);
+    }
+
+}
+```
+Apresentaria os parametros passados via rota.
+
+### Modulos
+
+O angular possui alguns módulos que serão comumente utilizados...
+
+#### BrowserModule
+
+Possui diversos arquivos que são necessário pro Angular funcionar, inclusive as diretivar básica (*ngFor*, *ngIf*) e ele deve ser importante uma única vez no projeto, no primeiro módulo **AppModule**.
+
+#### CommonModule
+
+Quando trabalhamos com vários módulos, como faremos pra usar diretivas? Bom, parte dos arquivos, incluindo as diretivas, são exportadas por esse módulo e ele pode ser importado inúmeras vezes.
+
+#### RouterModule
+
+Permite trabalharmos com roteamento dentro da aplicação, criando rotas personalizadas e navegando entre elas programaticamente.
+
+### Forms
+
+O angular possui um recurso chamado **Model Driven Forms** que permite que a validação de um formulário fique do nado do componente, não no template.
+
+Para isso dependemos de acesso ao **ReactiveFormsModule** disponivilizado no módulo que necessita de validações.
+
+Para iniciar, o formulário precisa ser associado a um **FormGroup** que será o responsável por realizar as validações. Para isso basta declarar a variável desse tipo e associa-la ao formulário atraves de data binding:
+```typescript
+export class MeuFormularioComponent {
+    meuFormulario: FormGroup;
+}
+```
+```html
+<form [formGroup]="meuFormulario">
+
+</form>
+```
+
+Um formulário pode ser grande e com muitas regras, e para nos auxiliar e disposto o **FormBuilder** que deve ser recebido via injeção de dependencia.
+
+Esse builder nor fornece meios de declarar grupos (formulários) e controles (campos do formulário). Um grupo pode possuir inumeros controles. Esses controles recebem uma array que pode conter algumas configurações, como seu valor inicial e validações de seu conteúdo. Cada controlador deve ser associado a um input via data binding:
+```typescript
+export class MeuFormularioComponent implements OnInit {
+    
+    meuFormulario: FormGroup;
+    
+    constructor(private formBuilder: FormBuilder) { }
+
+    ngOnInit(): void {
+        this.meuFormulario = this.formBuilder.group({
+            campo1: ['valor aletório'],
+            campo2: [123],
+        });
+    }
+
+}
+```
+```html
+<form [formGroup]="meuFormulario">
+    <input formControlName="campo1" type="text" name="campo1" />
+    <input formControlName="campo2" type="number" name="campo2" />
+</form>
+```
+Nesse caso o formulário foi declarado possuindo já valores iniciais.
+
+Os grupos e controles possui métodos e propriedades que nos auxiliam e resgatar informações sobre o formulário.
+
+Exemplo acesso um controle dentro do grupo:
+```typescript
+console.log(meuFormulário.get('campo1'));
+```
+Através do método *get* de um grupo, conseguimos acessar o controle com o nome informado.
+
+Para checar se um formulário está válido (todas validações passaram) ou inválido, utilizamos as propriedades *valid* e *invalid*. Exemplo:
+```typescript
+this.meuFormulario = this.formBuilder.group({
+    senha: ['']
+});
+
+console.log(this.meuFormulario.valid);
+console.log(this.meuFormulario.invalid);
+```
+Esses propriedades também existe em controles.
+
+Para controlar a submissão do doumulário, podemos efetuar um binding de sua propriedade de evento *submit* e atribuir um método para realizar ações. Exemplo:
+```typescript
+export class MeuFormularioComponent implements OnInit {
+    
+    meuFormulario: FormGroup;
+    
+    constructor(private formBuilder: FormBuilder) { }
+
+    ngOnInit(): void {
+        this.meuFormulario = this.formBuilder.group({
+            campo1: ['']
+        });
+    }
+
+    formularioEnviado() {
+        console.log('O formulário foi enviado');
+        console.log('Valor do campo1', this.meuFormulario.get('campo1').value);
+    }
+
+}
+```
+```html
+<form [formGroup]="meuFormulario" (submit)="formularioEnviado()">
+    <input formControlName="campo1" type="text" name="campo1" />
+</form>
+```
+
+Para resgatar todos os valores do formulário, podemos utilizar:
+```typescript
+const formData = this.meuFormulario.getRawValue();
+```
+
+#### Validadores
+
+Existem várias regras de validações que podem ser inseridas. E podemos criar as nossas próprias. Ex:
+
+- **required** - Define que o campo é obrigatório.
+- **minLength** - Define um tamanho minimo (apenas texto).
+- **maxLength** - Define um tamanho máximo (apenas texto).
+- **email** - Se é um e-mail valido
+- **pattern** - Checa se passa em uma expressão regular fornecida.
+
+Exemplo de uso de validação:
+```typescript
+export class MeuFormularioComponent implements OnInit {
+    
+    meuFormulario: FormGroup;
+    
+    constructor(private formBuilder: FormBuilder) { }
+
+    ngOnInit(): void {
+        this.meuFormulario = this.formBuilder.group({
+            senha: ['', Validators.required]
+        });
+    
+    }
+}
+```
+
+Podemos criar nosso próprio validador, criando uma função que recebe como parametro um **AbstractControl** que retorna *null* caso não haja erros, e em caso de erros retorna um objeto que possui uma propriedade com o nome do validador e o valor *true*.
+
+Exemplo:
+```typescript
+import { AbstractControl } from '@angular/forms';
+
+export function parValidator(control: AbstractControl) {
+
+    if (Number.isInteger(control.value) && control.value % 2 !== 0) {
+        return null;
+    }
+
+    return {
+        lowerCase: true
+    };
+}
+```
+Valida se o valor digitado é um número par.
+
+O controle pode possuir um atributo chamado *errors* que irá possuir os erros de validação que ele possui, baseado no nome das validação inseridas. Exemplo:
+```typescript
+this.meuFormulario = this.formBuilder.group({
+    senha: ['', Validators.required]
+});
+
+console.log(this.meuFormulario.get('senha').errors?.required);
+```
+O atributo *errors* só existe quando há erros na validação do campo.
+
+#### FormGroup
+
+Podemos limpar todos os dados do formulário:
+```typescript
+export class MeuFormularioComponent implements OnInit {
+    
+    meuFormulario: FormGroup;
+    
+    constructor(
+        private formBuilder: FormBuilder
+    ) { }
+
+    ngOnInit(): void {
+        this.meuFormulario = this.formBuilder.group({
+            campo1: ['']
+        });
+    }
+
+    limpar() {
+        this.meuFormulario.reset();
+    }
+
+}
+```
+```html
+<form [formGroup]="meuFormulario" (submit)="formularioEnviado()">
+    <input formControlName="campo1" type="text" name="campo1" />
+</form>
+```
+
+#### FormControl
+
+Um controle possui alguns métodos e atributos que pode, e deve, nos auxiliar:
+
+- **value** - Possui o valor digitado no campo.
+
+### Variável de template
+
+Podemos criar uma variável dentro de um template que só existirá dentro dele, e realizamos manipulações nele através dela.
+
+Para criar a variável, dentro da TAG colocamos um quadrado (hashtag, jogo da velha, etc.) e em seguida o nome da variável.
+
+Exemplo, pegando o valor:
+```html
+<input #nomeInput type="text" />
+<p>
+    Valor digitado é: {{ nomeInput.value }}
+</p>
+```
+
+### Interceptor
+
+Podemos utilizar interceptadores em requisições HTTP, tanto na requisição como na resposta.
+
+Isso pode servir para várias coisas, como cache de resultado, padronização de conteudo, adição de cabeçalhos, etc.
+
+O exemplo classico seria de adição do token de validação de usuário autenticado em todas requisições realizadas.
+
+Um interceptor é uma classe com o decorator **Ijectable** que implementa a interface **HttpInterceptor**. A interface por sua vez obrigará que seja implementado o método **intercept** que recebe como parametro um **HttpRequest** e um **HttpHandler**; Ele deve retornar um Observable (afinal, é uma requisição http).
+
+Essa função para funcionar deve retornar a chamado do método **handle** do **HttpHandler** recebido, passando como parametro o **HttpResquest**.
+
+Antes desse retorno, pode ser feito as alterações na requisição.
+
+Exemplo:
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+@Injectable()
+export class RequestInterceptor implements HttpInterceptor {
+
+  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    const token = this.tokenService.getToken();
+    req = req.clone({
+      setHeaders: {
+        'Content-type': 'application/json',
+        'Angular': 'é show'
+      }
+    });
+
+    return next.handle(req);
+  }
+
+}
+```
+Um detalhe é que é necessário clonar a requisição antes de altera-la, e reatribuir seu novo valor.
+
+Depois disso, para por em funcionamento o interceptor, ele precisa ser adicionado aos *providers* dos módulos onde ele será utilizado.
+
+Exemplo:
+```typescript
+providers: [
+  {
+    provide: HTTP_INTERCEPTORS,
+    useClass: RequestInterceptor,
+    multi: true
+  }
+]
+```
+Assim, definimos o tipo de provider, a classe que criamos, e a propriedade multi diz que ter vários interceptors que podem alterar a reuisição.
