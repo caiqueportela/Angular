@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 
-import { DarkenOnHoverDirective } from './darken-on-hover-directive';
+import { DarkenOnHoverDirective } from './darken-on-hover.directive';
 
 @NgModule({
   declarations: [

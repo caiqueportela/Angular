@@ -14,7 +14,7 @@ Posso ainda não ter concluido a todos.
 - [X] [Webpack: Manipulando módulos na sua webapp](https://cursos.alura.com.br/course/webpack) - [Código](https://github.com/caiqueportela/Angular/tree/master/cursos/003)
 - [X] [Angular parte 1: Fundamentos](https://cursos.alura.com.br/course/angular-fundamentos) - [Código](https://github.com/caiqueportela/Angular/tree/master/cursos/004)
 - [X] [Angular parte 2: Autenticação, Forms e lazy loading](https://cursos.alura.com.br/course/angular-autenticacao) - [Código](https://github.com/caiqueportela/Angular/tree/master/cursos/005)
-- [ ] [Angular parte 3: upload, build e novos componentes](https://cursos.alura.com.br/course/angular-upload-build)
+- [X] [Angular parte 3: upload, build e novos componentes](https://cursos.alura.com.br/course/angular-upload-build) - [Código](https://github.com/caiqueportela/Angular/tree/master/cursos/006)
 - [ ] [Angular parte 4: lapidando o projeto](https://cursos.alura.com.br/course/angular-lapidando-projeto)
 - [ ] [Angular e Jasmine: Testes de unidade para sua aplicação](https://cursos.alura.com.br/course/angular-unit-test)
 - [ ] [Jasmine: Testes automatizados em JavaScript](https://cursos.alura.com.br/course/testes-automatizados-em-javascript-com-jasmine)

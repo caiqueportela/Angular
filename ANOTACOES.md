@@ -579,6 +579,28 @@ Para parra esse parametro, fazemos:
 ```
 Esse valor pode ser também passado por binding (entre colchetes).
 
+Esses parametros nada mais são que os parametros de classes com uma anotação, então como simples parametros, o TypeScript oferece o suporte a getters e setters, e portando um parametro com anotação @Input pode ser uma função setter com uma lódiga a ser aplicada.
+
+Exemplo:
+```typescript
+export class MeuComponent {
+
+  nome = '';
+  sobrenome = '';
+
+  @Input() set nomeCompleto(valor: string) {
+    const split = valor.split(' ');
+    this.nome = split[0];
+    this.sobrenome = split[1];
+  }
+
+  get nomeCompleto() {
+    return `${this.nome} ${this.sobrenome}`;
+  }
+}
+```
+Criar o getter não é obrigatório.
+
 ### Output properties
 
 É a forma que um model (componente) possa retornar um valor para a view (template) que chamou ele.
@@ -966,6 +988,47 @@ pipe(
 )
 .subscribe(() => console.log('o tempo passou'));
 ```
+
+#### switchMap
+
+Permite cancelar um observable e emitir um novo em seguida. O observable não é literalmente cancelado, ele é executado mas nada é feito no seu subscribe.
+
+Exemplo:
+```typescript
+export class MeuService {
+
+  constructor(private http: HttpClient) { }
+
+  login(userName: string, password: string) {
+    return this.http
+      .post('http://localhost/login', {userName, password})
+      .pipe(
+        switchMap(() => this.http.get('http://localhost/getUser'))
+      );
+  }
+
+}
+```
+Nesse caso, após o login, será realizado em sequência da sua conclusão o código informado.
+
+
+#### map
+
+Permite percorrer os dados de uma resposta de um Observable e realizar ações sobre eles, e retornar no final.
+
+Útil pra padronizar uma resposta e realizar tratamentos.
+
+#### catchError
+
+Auxilia a capturar erros (tudo diferente de status 2XX) e trata-los.
+
+#### of
+
+Cria um Observable a partir do valor passado.
+
+#### throwError
+
+Como se fosse um *throw* comum do JS, mas nesse caso ele permitir que o erro continue a percorrer a pilha de chamadas.
 
 ### Rotas
 
@@ -1747,3 +1810,16 @@ providers: [
 ]
 ```
 Assim, definimos o tipo de provider, a classe que criamos, e a propriedade multi diz que ter vários interceptors que podem alterar a reuisição.
+
+### Environments
+
+Algumas informações, como endereço da API, muda dependendo do ambiente (desenvolviment, testes e produção) e os enviroments nos ajudam com essas informações.
+
+Dentro de **src/environments** há dois arquivos por padrão:
+
+- **environments.ts** Onde colocamos as variáveis do ambiente local (desenvolvimento).
+- **environments.prod.ts** Onde colocamos as variáveis do ambiente de produção.
+
+Para usarmos esses dados, devemos importar o arquivo **environments.ts** e utilizar as chaves criadas na constante ***environment***.
+
+Quando o angular carrega, eme primeiro importa o **environments** de desenvolvimento e depois, caso esteja em produção, substituir os valores pelo **environments.prod**.
