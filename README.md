@@ -15,11 +15,10 @@ Posso ainda não ter concluido a todos.
 - [X] [Angular parte 1: Fundamentos](https://cursos.alura.com.br/course/angular-fundamentos) - [Código](https://github.com/caiqueportela/Angular/tree/master/cursos/004)
 - [X] [Angular parte 2: Autenticação, Forms e lazy loading](https://cursos.alura.com.br/course/angular-autenticacao) - [Código](https://github.com/caiqueportela/Angular/tree/master/cursos/005)
 - [X] [Angular parte 3: upload, build e novos componentes](https://cursos.alura.com.br/course/angular-upload-build) - [Código](https://github.com/caiqueportela/Angular/tree/master/cursos/006)
-- [ ] [Angular parte 4: lapidando o projeto](https://cursos.alura.com.br/course/angular-lapidando-projeto)
+- [X] [Angular parte 4: lapidando o projeto](https://cursos.alura.com.br/course/angular-lapidando-projeto) - [Código](https://github.com/caiqueportela/Angular/tree/master/cursos/007)
 - [ ] [Angular e Jasmine: Testes de unidade para sua aplicação](https://cursos.alura.com.br/course/angular-unit-test)
 - [ ] [Jasmine: Testes automatizados em JavaScript](https://cursos.alura.com.br/course/testes-automatizados-em-javascript-com-jasmine)
 - [ ] [Protractor: Testes automatizados com javascript](https://cursos.alura.com.br/course/testes-protractor)
-- [ ] [MEAN Stack: criando aplicações completas com Javascript](https://cursos.alura.com.br/course/mean-javascript)
 
 ### Vídeos
 

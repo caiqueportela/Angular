@@ -678,6 +678,49 @@ const numero = 3;
 </ng-template>
 ```
 
+#### ngClass
+
+A diretiva ***ngClass*** serve para adicionar classes a um elemento dinamicamente, dependendo de uma condição.
+
+Exemplo de uso:
+```typescript
+const centraliza = true;
+```
+```html
+<p [ngClass]="{ 'text-center': centraliza }">
+    Será que estou centralizado?
+</p>
+```
+Assim, o paragráfo irá receber a classe *text-center* se o valor da variável *centraliza* seja true. Também poderia receber uma função que retorne um booleano.
+
+Também pode-se passar uma classe que está dentro de uma variável.
+
+Exemplo:
+```typescript
+const classe = 'text-center';
+```
+```html
+<p [ngClass]="classe">
+    Será que estou centralizado?
+</p>
+```
+
+#### ngForm
+
+A diretiva ***ngForm*** serve para criar uma variável de template que aponta para um formGroup. Ela só deve ser utilizada em formulários. E partir dela temos acesso ao formulário, seus controles, estados, etc.
+
+Exemplo de uso:
+```html
+<form #formulario="ngForm">
+  <input type="text">
+  <p *ngIf="formulario.submitted">Foi enviado!</p>
+  <button type="submit">Enviar</button>
+</form>
+```
+Possui atribuitos próprios e outras diretivas que auxiliam a ter um controle completo do formulário.
+
+Ele é utilizado quando via template se quer fazer tudo relacionado ao formulário, sem interação direta com modelo.
+
 #### Diretiva customizada
 
 Uma diretiva é uma classe que possui o decorator **@Directive** e receber um objeto com configurações, sendo *seletor* como obrigatório para definir como ele será utilizado.
@@ -924,6 +967,11 @@ observavel.subscribe(valor => console.log(`Novo valor: ${valor}));
 observavel.unsubscribe();
 ```
 
+Ele pode ser acessado como um observable, assim quem tiver se inscrito nas suas alterações será informado sempre que mudar:
+```typescript
+return observavel.asObservable();
+```
+
 #### BehaviorSubject
 
 Semelhante ao **Subject** mas com duas diferenças importantes:
@@ -1029,6 +1077,37 @@ Cria um Observable a partir do valor passado.
 #### throwError
 
 Como se fosse um *throw* comum do JS, mas nesse caso ele permitir que o erro continue a percorrer a pilha de chamadas.
+
+#### finalize
+
+Utilizado para definir um bloco de código a ser executado ao final do Observable, seja com sucesso ou erro.
+
+```typescript
+pipe(
+  finalize(() => {
+    console.log('Finalizado!');
+  })
+).subscribe(
+  value => {
+    console.log(value);
+  },
+  err => {
+    console.log(err);
+  }
+);
+```
+
+#### startWith
+
+Utilizando pra definir um valor inicial a um observable. Por exemplo em um Subject, para começar com um valor inicial.
+
+```typescript
+return new Subject<boolean>()
+  .asObservable()
+  .pipe(
+    startWith(false)
+  );
+```
 
 ### Rotas
 
@@ -1302,6 +1381,40 @@ Para contornar isso, posso remove o objeto da declaração do decorator que cria
 - Se essa classe apenas é ultilizada por um único componente, dentro da declaração do componente passamos a um atributo chamado **providers** um array contendo os Injectables que ele precisa.
 - Se é utilizada por mais de um componente do módulo, ai declaramos dentro do módulo também no atributo **providers**.
 
+#### Dados adicionais
+
+Toda rota possui um campo chamado **data** onde pode ser passados dados adicionais para o componente.
+
+Exemplo de uso na declaração:
+```typescript
+{
+    path: 'numeros/:quantidade',
+    component: NumerosComponent,
+    data: {
+      campo1: 'valor passado',
+      campo2: 'outro valor',
+    }
+}
+```
+Ele é um objeto que pode receber inúmeros objetos de vários tipos.
+
+Para acessar esses dados, precisa acessar a propriedade *data* do snapshot da rota ativa, e dentro dessa propriedade terá os dados passados.
+
+Exemplo:
+```typescript
+export class NumerosComponent implements OnInit {
+
+    constructor(
+        private activatedRoute: ActivatedRoute
+    ) { }
+
+    ngOnInit(): void {
+        const campo1 = this.activatedRoute.snapshot.data.campo1;
+        const campo2 = this.activatedRoute.snapshot.data.campo2;
+    }
+}
+```
+
 ### Resolvers
 
 Ele é executado antes da contrução de um componente de uma rota e disponibiliza arquivos para esse componente.
@@ -1480,6 +1593,54 @@ Adicionando o parametro **observe** com o valor *response* poderemos receber o c
 
 Aproveitando os operados pipe e tap do RxJS, conseguimos pegar a resposta antes de retornar o Observable. Assim temos acesso ao cabeçalho.
 
+Para acompanhar o progesso da requisição, é possível adicionando configurações:
+```typescript
+export class MeuService {
+
+  constructor(private http: HttpClient) { }
+
+  upload(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http
+      .post('http://localhost/upload',
+        formData,
+        {
+          observe: 'events',
+          reportProgress: true
+        }
+      );
+  }
+
+}
+```
+
+E ao se inscrever no Observable da requisição, poderemos acompanhar a atualização da requisição:
+```typescript
+export class MeuComponent {
+
+  porcentagem = 0;
+
+  constructor(private meuService: MeuService) { }
+
+  upload(file: File) {
+    this.meuService
+      .subscribe((event: HttpEvent<any>) => {
+        if(event.type === HttpEventType.UploadProgress) {
+          this.porcentagem = Math.round(100 * event.loaded / event.total);
+        } else if(event.type === HttpEventType.Response) {
+          console.log('Upload completado!');
+        }
+      });
+  }
+
+}
+```
+O subscribe vai receber um novo valor sempre que a requisição avançar, logo precisamos condicionar a ação do evento, para se for de progresso calcular a porcentagem atual, e se for de conclusão fazer o que for necessário.
+
+Isso é mais útil com arquivos, pois não necessita de muita lógica no backend, logo quando terminar de enviar a requisição (100% dos dados enviados), provavelmente conclua muita rapidamente.
+
 #### Router <sub><sub>Fornecido por **RouterModule**.</sub></sub>
 
 Da acesso a manipulação de rota atual. Deve ser injetado.
@@ -1516,6 +1677,64 @@ export class MeuComponent {
 ```
 Recebe como primeiro parametro uma array contendo cada valor que forma a rota. Eles serão juntados separados por barra.
 
+Ao navegar, podemos passar algumas informações de configuração.
+
+Exemplo, substituir a rota atual do histórico de rotas pela rota de destino:
+```typescript
+export class MeuComponent {
+
+    constructor(
+        private router: Router
+    ) { }
+
+    navegar() {
+        this.router.navigate(['rota', 'nova'], { replaceUrl: true });
+    }
+}
+```
+Assim, por exemplo, se estamos em uma rota onde apagamos algo e redirecionamos, podemos remover do histórico a rota do que foi excluido, evitando que o usuário tente navegar de volta.
+
+Podemos também passar parametros de query ao navegar:
+
+```typescript
+export class MeuComponent {
+
+    constructor(
+        private router: Router
+    ) { }
+
+    navegar() {
+        this.router.navigate(
+          ['rota', 'nova'],
+          {
+            queryParams: {
+              parametro1: 'valor 1',
+              parametro2: 'valor 2'
+            }
+          }
+        );
+    }
+}
+```
+
+E no componente de destino, receber esses parametros:
+
+```typescript
+export class MeuComponent implements OnInit {
+
+    constructor(
+        private activatedRoute: ActivatedRoute
+    ) { }
+
+    ngOnInit(): void {
+      this.activatedRoute.queryParams.subscribe(params => {
+        console.log('parametro1', params.parametro1);
+        console.log('parametro2', params.parametro2);
+      });
+    }
+}
+```
+
 #### ActivatedRoute <sub><sub>Fornecido por **RouterModule**.</sub></sub>
 
 Permite acesso aos dados da rota atual.
@@ -1528,17 +1747,35 @@ Se refere a uma fotografia atual da rota, e essa fotografia possui informações
 ```typescript
 export class MeuComponent implements OnInit {
 
-    constructor(
-        private activatedRoute: ActivatedRoute
-    ) { }
+  constructor(
+    private activatedRoute: ActivatedRoute
+  ) { }
 
-    ngOnInit(): void {
-        console.log(this.activatedRoute.snapshot.params);
-    }
+  ngOnInit(): void {
+    console.log(this.activatedRoute.snapshot.params);
+  }
 
 }
 ```
 Apresentaria os parametros passados via rota.
+
+#### Title
+
+Permite alterar o título da página dinamicamente.
+
+```typescript
+export class MeuComponent implements OnInit {
+
+  constructor(
+    private titleService: Title
+  ) { }
+
+  ngOnInit(): void {
+    this.titleService.setTitle('Novo titulo');
+  }
+
+}
+```
 
 ### Modulos
 
@@ -1558,7 +1795,7 @@ Permite trabalharmos com roteamento dentro da aplicação, criando rotas persona
 
 ### Forms
 
-O angular possui um recurso chamado **Model Driven Forms** que permite que a validação de um formulário fique do nado do componente, não no template.
+O angular possui um recurso chamado **Model Driven Forms** que permite que a validação de um formulário fique do lado do componente, não no template.
 
 Para isso dependemos de acesso ao **ReactiveFormsModule** disponivilizado no módulo que necessita de validações.
 
@@ -1708,6 +1945,41 @@ console.log(this.meuFormulario.get('senha').errors?.required);
 ```
 O atributo *errors* só existe quando há erros na validação do campo.
 
+Pode-se querer criar um validador para o formulário, e não para um campo específico, por exemplo pra cirar uma regra que dependa de mais e um campo (crossfield validator).
+
+Criamos uma função que recebe como parametro um **FormGroup** que retorna *null* caso não haja erros, e em caso de erros retorna um objeto que possui uma propriedade com o nome do validador e o valor *true*. O parametro recebido é justamente o formulário completo, assim podemos acessar qualquer controle que ele possua.
+
+Exemplo:
+```typescript
+import { ValidatorFn, FormGroup } from '@angular/forms';
+
+export const nomeSenha: ValidatorFn = (formGroup: FormGroup) => {
+  const nome = formGroup.get('nome').value;
+  const senha = formGroup.get('senha').value;
+
+  if (nome === password) {
+    return { nomeSenha: true };
+  }
+
+  return null;
+}
+
+```
+Checa se o usuário e senha são iguais, caso seja retorna como erro.
+
+O formulário também pode possuir um atributo chamado *errors*. Exemplo:
+```typescript
+this.meuFormulario = this.formBuilder.group({
+  nome: ['', Validators.required],
+  senha: ['', Validators.required]
+}, {
+  validator: nomeSenha
+});
+
+console.log(this.meuFormulario.errors?.nomeSenha);
+```
+Assim, adicionamos a validação ao formulário como um todo, e exibimos mensagem caso tenha um erro. O formulário pode receber mais de uma validação, nesse caso passamos elas via uma array.
+
 #### FormGroup
 
 Podemos limpar todos os dados do formulário:
@@ -1823,3 +2095,104 @@ Dentro de **src/environments** há dois arquivos por padrão:
 Para usarmos esses dados, devemos importar o arquivo **environments.ts** e utilizar as chaves criadas na constante ***environment***.
 
 Quando o angular carrega, eme primeiro importa o **environments** de desenvolvimento e depois, caso esteja em produção, substituir os valores pelo **environments.prod**.
+
+### Eventos do usuário 
+
+Eventos relacionados a ações (click, botão pressionado, etc.) que podem ser realizados pelos usuários.
+
+Não se deve utilizar os eventos padrões do JS, e sim os personalizados do angular.
+
+#### click
+
+Disparado quando é clicado no elemento. Executa o código definido (geralmente uma função, mas pode ser qualquer coisa).
+
+```typescript
+clicado() {
+  alert('Clicou!');
+}
+```
+```html
+<p (click)="clicado()">
+  Clique e veja...
+</p>
+```
+
+#### keyup
+
+Disparado quando alguma tecla do teclado é pressionado.
+
+```typescript
+digitou() {
+  console.log('Digitando...');
+}
+```
+```html
+<input type="text" (keyup)="digitou()" />
+```
+
+Pode se especificar qual tecla ele deve escutar.
+```typescript
+apertou() {
+  console.log('Apertou enter');
+}
+```
+```html
+<input type="text" (keyup.enter)="apertou()" />
+```
+
+### Error handler
+
+Basicamente ele é um interceptador de erros, onde sempre que ocorrer um erro na aplicação o mesmo será acionado para trata-la. Por padrão o Angular já possui um interceptador, que simplesmente efetua um console.log do erro.
+
+Para criar um error handler, precisamos criar uma classe injetável que implemente a interface **ErrorHandler** que nos obrigará a implementar o método **handleError** que será invocado quando houver um erro, e deverá efetuar o tratamento necessário.
+
+Exemplo:
+```typescript
+@Injectable()
+export class MeuErrorHandler implements ErrorHandler {
+
+  handleError(error: any): void {
+    console.log('Erro: ', error.message);
+  }
+
+}
+```
+Pode-se utilizar de qualquer ação junto ao erro.
+
+Para por em funcionamento o error handler, ele precisa ser adicionado aos *providers* dos módulos onde ele será utilizado.
+
+Exemplo:
+```typescript
+providers: [
+  {
+    provide: ErrorHandler,
+    useClass: MeuErrorHandler
+  }
+]
+```
+Assim, definimos o tipo de provider e a classe que criamos.
+
+Como essa classe será responsável por tratar todos os erros da aplicação, ou pelo menos dos módulos onde for declarado, não é uma boa prática injetar dependencias nela, pois a classe que trata os erros ainda não estará disponível, então caso ocorra um erro na dependencia, não terá quem trate.
+
+Como alternativa a esse possivel necessidade, pode-se utilizar a classe **Injector** do Angular, que nos auxiliar a pegar uma dependencia manualmente.
+
+Exemplo:
+```typescript
+@Injectable()
+export class MeuErrorHandler implements ErrorHandler {
+
+  constructor(
+    private injector: Injector
+  ) { }
+
+  handleError(error: any): void {
+    const router = this.injector.get(Router);
+
+    router.nagivate(['/erro']);
+    console.log('Erro: ', error.message);
+  }
+
+}
+```
+Como o **Injector** é uma classe do Angular, ela não deve gerar erros, então pode ser injetada sem maiores problemas. Se essa classe estiver com erros, significa que há um problema bem maior que a classe de erro handler não vai ajudar.
+
